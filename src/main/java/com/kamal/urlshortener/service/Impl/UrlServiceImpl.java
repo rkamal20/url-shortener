@@ -3,6 +3,7 @@ package com.kamal.urlshortener.service.Impl;
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
 import com.kamal.urlshortener.entity.UrlEntity;
+import com.kamal.urlshortener.exception.ResourceNotFoundException;
 import com.kamal.urlshortener.repository.UrlRepository;
 import com.kamal.urlshortener.service.UrlService;
 import jakarta.transaction.Transactional;
@@ -35,7 +36,7 @@ public class UrlServiceImpl implements UrlService {
 
         urlEntity = this.urlRepository.save(urlEntity);  // check duplicate short code is pending, collision check
 
-        return modelMapper.map(urlEntity, UrlDto.class);
+        return modelMapper.map(urlEntity, UrlDto.class); // should return complete short url
     }
 
     private String generateCode() {
@@ -74,5 +75,18 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public void deleteUrl(Long id) {
 
+    }
+
+    @Override
+    public UrlDto getUrlById(Long id) {
+
+        UrlEntity urlEntity = this.urlRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "URL not found for id: " + id
+                        )
+                );
+
+        return modelMapper.map(urlEntity, UrlDto.class);
     }
 }

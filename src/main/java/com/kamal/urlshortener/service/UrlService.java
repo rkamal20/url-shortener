@@ -14,4 +14,6 @@ public interface UrlService {
     UrlDto patchUrl(Long id, NewUrlDto dto);
 
     void deleteUrl(Long id);
+
+    UrlDto getUrlById(Long id);
 }

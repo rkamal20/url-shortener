@@ -6,10 +6,7 @@ import com.kamal.urlshortener.service.UrlService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/urls")
@@ -26,5 +23,9 @@ public class UrlController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.urlService.createUrl(dto));
     }
 
+   @GetMapping("/{id}")
+   public ResponseEntity<UrlDto> getUrlById(@PathVariable Long id) {
+        return ResponseEntity.ok(this.urlService.getUrlById(id));
+   }
 
 }
