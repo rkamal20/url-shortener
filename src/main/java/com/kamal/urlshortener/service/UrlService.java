@@ -3,20 +3,15 @@ package com.kamal.urlshortener.service;
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
 
-import java.util.List;
-import java.util.Map;
-
 public interface UrlService {
 
-    List<UrlDto> getUrls();
+    UrlDto createUrl(NewUrlDto dto);
 
-    UrlDto getUrlById(Long id);
+    UrlDto getUrl(Long id);
 
-    UrlDto addUrl(NewUrlDto newUrlDto);
+    UrlDto updateUrl(Long id, NewUrlDto dto);
 
-    void deleteUrlById(Long id);
+    UrlDto patchUrl(Long id, NewUrlDto dto);
 
-    UrlDto updateUrl(Long id, NewUrlDto newUrlDto);
-
-    UrlDto updatePartialUrl(Long id, Map<String, Object> updates);
+    void deleteUrl(Long id);
 }

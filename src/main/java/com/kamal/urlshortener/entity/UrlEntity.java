@@ -1,11 +1,14 @@
 package com.kamal.urlshortener.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
+
 @Entity
+@Table(name = "urls")
 @Getter
 @Setter
 public class UrlEntity {
@@ -14,7 +17,15 @@ public class UrlEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String originalUrl;
 
+    @Column(unique = true, nullable = false, length = 6)
     private String shortCode;
+
+    private Long clickCount = 0L;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime expiresAt;
 }
