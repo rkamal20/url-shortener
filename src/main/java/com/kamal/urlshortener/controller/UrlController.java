@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/urls")
 public class UrlController {
@@ -23,9 +25,24 @@ public class UrlController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.urlService.createUrl(dto));
     }
 
-   @GetMapping("/{id}")
-   public ResponseEntity<UrlDto> getUrlById(@PathVariable Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<UrlDto> getUrlById(@PathVariable Long id) {
         return ResponseEntity.ok(this.urlService.getUrlById(id));
-   }
+    }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUrl(@PathVariable Long id) {
+        this.urlService.deleteUrl(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UrlDto> updateUrl(@PathVariable Long id, @RequestBody @Valid NewUrlDto dto) {
+        return ResponseEntity.ok(this.urlService.updateUrl(id, dto));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<UrlDto> patchUrl(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        return ResponseEntity.ok(this.urlService.patchUrl(id, updates));
+    }
 }

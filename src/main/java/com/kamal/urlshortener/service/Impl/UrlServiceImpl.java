@@ -11,6 +11,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -39,6 +40,72 @@ public class UrlServiceImpl implements UrlService {
         return modelMapper.map(urlEntity, UrlDto.class); // should return complete short url
     }
 
+
+    @Override
+    public UrlDto updateUrl(Long id, NewUrlDto dto) {
+
+        UrlEntity urlEntity = this.urlRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("URL not found for id: " + id)
+                );
+
+        modelMapper.map(dto, urlEntity);
+        urlEntity = this.urlRepository.save(urlEntity);
+
+        return modelMapper.map(urlEntity, UrlDto.class);
+    }
+
+    @Override
+    public UrlDto patchUrl(Long id, Map<String, Object> updates) {
+
+        UrlEntity urlEntity = this.urlRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("URL not found for id: " + id)
+                );
+
+        updates.forEach((field, value) -> {
+                    switch (field) {
+                        case "originalUrl":
+                            urlEntity.setOriginalUrl((String) value);  // No validation check as of now
+                            break;
+                        case "shortCode":
+                            urlEntity.setShortCode((String) value);
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Field not supported: " + field); // Need to handle globally
+                    }
+                }
+        );
+
+        UrlEntity savedUrlEntity = this.urlRepository.save(urlEntity);
+
+        return modelMapper.map(savedUrlEntity, UrlDto.class);
+    }
+
+    @Override
+    public void deleteUrl(Long id) {
+
+        UrlEntity urlEntity = this.urlRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("URL not found for id: " + id)
+                );
+
+        this.urlRepository.delete(urlEntity);
+    }
+
+    @Override
+    public UrlDto getUrlById(Long id) {
+
+        UrlEntity urlEntity = this.urlRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "URL not found for id: " + id
+                        )
+                );
+
+        return modelMapper.map(urlEntity, UrlDto.class);
+    }
+
     private String generateCode() {
 
         String base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -55,38 +122,5 @@ public class UrlServiceImpl implements UrlService {
             );
         }
         return code.toString();
-    }
-
-    @Override
-    public UrlDto getUrl(Long id) {
-        return null;
-    }
-
-    @Override
-    public UrlDto updateUrl(Long id, NewUrlDto newUrlDto) {
-        return null;
-    }
-
-    @Override
-    public UrlDto patchUrl(Long id, NewUrlDto newUrlDto) {
-        return null;
-    }
-
-    @Override
-    public void deleteUrl(Long id) {
-
-    }
-
-    @Override
-    public UrlDto getUrlById(Long id) {
-
-        UrlEntity urlEntity = this.urlRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "URL not found for id: " + id
-                        )
-                );
-
-        return modelMapper.map(urlEntity, UrlDto.class);
     }
 }
