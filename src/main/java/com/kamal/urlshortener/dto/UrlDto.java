@@ -15,6 +15,8 @@ public class UrlDto {
 
     private String shortCode;
 
+    private String shortUrl;
+
     private Long clickCount;
 
     private LocalDateTime createdAt;

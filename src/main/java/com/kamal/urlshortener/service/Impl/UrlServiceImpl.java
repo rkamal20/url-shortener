@@ -37,7 +37,11 @@ public class UrlServiceImpl implements UrlService {
 
         urlEntity = this.urlRepository.save(urlEntity);  // check duplicate short code is pending, collision check
 
-        return modelMapper.map(urlEntity, UrlDto.class); // should return complete short url
+        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
+        response.setShortUrl(
+                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
+        );
+        return response;
     }
 
 
@@ -52,7 +56,11 @@ public class UrlServiceImpl implements UrlService {
         modelMapper.map(dto, urlEntity);
         urlEntity = this.urlRepository.save(urlEntity);
 
-        return modelMapper.map(urlEntity, UrlDto.class);
+        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
+        response.setShortUrl(
+                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
+        );
+        return response;
     }
 
     @Override
@@ -79,7 +87,11 @@ public class UrlServiceImpl implements UrlService {
 
         UrlEntity savedUrlEntity = this.urlRepository.save(urlEntity);
 
-        return modelMapper.map(savedUrlEntity, UrlDto.class);
+        UrlDto response = modelMapper.map(savedUrlEntity, UrlDto.class);  // repetitive code
+        response.setShortUrl(
+                "http://localhost:8080/api/urls/r/" + savedUrlEntity.getShortCode()
+        );
+        return response;
     }
 
     @Override
@@ -103,7 +115,25 @@ public class UrlServiceImpl implements UrlService {
                         )
                 );
 
-        return modelMapper.map(urlEntity, UrlDto.class);
+        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
+        response.setShortUrl(
+                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
+        );
+        return response;
+    }
+
+    @Override
+    public String redirectUrl(String shortCode) {
+
+        UrlEntity urlEntity = this.urlRepository.findByShortCode(shortCode)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Short code not found: " + shortCode)
+                );
+
+        urlEntity.setClickCount(urlEntity.getClickCount() + 1);
+        this.urlRepository.save(urlEntity);
+
+        return urlEntity.getOriginalUrl();
     }
 
     private String generateCode() {
