@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Setter
 public class UrlDto {
 
-    private  Long id;
+    private Long id;
 
     private String originalUrl;
 
