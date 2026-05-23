@@ -16,4 +16,6 @@ public interface UrlService {
     void deleteUrl(Long id);
 
     UrlDto getUrlById(Long id);
+
+    String redirectUrl(String shortCode);
 }
