@@ -24,7 +24,7 @@ public class UrlController {
 
     @GetMapping("/r/{shortCode}")
     public ResponseEntity<Void> redirectUrl(@PathVariable String shortCode) {
-        String originalUrl = this.urlService.redirectUrl(shortCode);
+        String originalUrl = urlService.redirectUrl(shortCode);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(originalUrl));
@@ -34,27 +34,27 @@ public class UrlController {
 
     @PostMapping
     public ResponseEntity<UrlDto> createUrl(@RequestBody @Valid NewUrlDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.urlService.createUrl(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(urlService.createUrl(dto));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UrlDto> getUrlById(@PathVariable Long id) {
-        return ResponseEntity.ok(this.urlService.getUrlById(id));
+        return ResponseEntity.ok(urlService.getUrlById(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUrl(@PathVariable Long id) {
-        this.urlService.deleteUrl(id);
+        urlService.deleteUrl(id);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UrlDto> updateUrl(@PathVariable Long id, @RequestBody @Valid NewUrlDto dto) {
-        return ResponseEntity.ok(this.urlService.updateUrl(id, dto));
+        return ResponseEntity.ok(urlService.updateUrl(id, dto));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<UrlDto> patchUrl(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        return ResponseEntity.ok(this.urlService.patchUrl(id, updates));
+        return ResponseEntity.ok(urlService.patchUrl(id, updates));
     }
 }

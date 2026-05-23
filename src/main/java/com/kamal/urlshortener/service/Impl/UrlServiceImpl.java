@@ -8,6 +8,7 @@ import com.kamal.urlshortener.repository.UrlRepository;
 import com.kamal.urlshortener.service.UrlService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,10 +21,12 @@ public class UrlServiceImpl implements UrlService {
 
     private final UrlRepository urlRepository;
     private final ModelMapper modelMapper;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    public UrlServiceImpl(UrlRepository urlRepository, ModelMapper modelMapper) {
+    public UrlServiceImpl(UrlRepository urlRepository, ModelMapper modelMapper, StringRedisTemplate stringRedisTemplate) {
         this.urlRepository = urlRepository;
         this.modelMapper = modelMapper;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     @Override
@@ -31,11 +34,11 @@ public class UrlServiceImpl implements UrlService {
 
         UrlEntity urlEntity = modelMapper.map(dto, UrlEntity.class);
 
-        urlEntity.setShortCode(this.generateCode());
+        urlEntity.setShortCode(generateCode());
         urlEntity.setCreatedAt(LocalDateTime.now());
         urlEntity.setClickCount(0L);
 
-        urlEntity = this.urlRepository.save(urlEntity);  // check duplicate short code is pending, collision check
+        urlEntity = urlRepository.save(urlEntity);  // check duplicate short code is pending, collision check
 
         UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
         response.setShortUrl(
@@ -48,13 +51,13 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public UrlDto updateUrl(Long id, NewUrlDto dto) {
 
-        UrlEntity urlEntity = this.urlRepository.findById(id)
+        UrlEntity urlEntity = urlRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("URL not found for id: " + id)
                 );
 
         modelMapper.map(dto, urlEntity);
-        urlEntity = this.urlRepository.save(urlEntity);
+        urlEntity = urlRepository.save(urlEntity);
 
         UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
         response.setShortUrl(
@@ -66,7 +69,7 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public UrlDto patchUrl(Long id, Map<String, Object> updates) {
 
-        UrlEntity urlEntity = this.urlRepository.findById(id)
+        UrlEntity urlEntity = urlRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("URL not found for id: " + id)
                 );
@@ -85,7 +88,7 @@ public class UrlServiceImpl implements UrlService {
                 }
         );
 
-        UrlEntity savedUrlEntity = this.urlRepository.save(urlEntity);
+        UrlEntity savedUrlEntity = urlRepository.save(urlEntity);
 
         UrlDto response = modelMapper.map(savedUrlEntity, UrlDto.class);  // repetitive code
         response.setShortUrl(
@@ -97,18 +100,18 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public void deleteUrl(Long id) {
 
-        UrlEntity urlEntity = this.urlRepository.findById(id)
+        UrlEntity urlEntity = urlRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("URL not found for id: " + id)
                 );
 
-        this.urlRepository.delete(urlEntity);
+        urlRepository.delete(urlEntity);
     }
 
     @Override
     public UrlDto getUrlById(Long id) {
 
-        UrlEntity urlEntity = this.urlRepository.findById(id)
+        UrlEntity urlEntity = urlRepository.findById(id)
                 .orElseThrow(() ->
                         new ResourceNotFoundException(
                                 "URL not found for id: " + id
@@ -125,15 +128,33 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public String redirectUrl(String shortCode) {
 
-        UrlEntity urlEntity = this.urlRepository.findByShortCode(shortCode)
+        String cachedUrl = stringRedisTemplate.opsForValue().get(shortCode);
+
+        if (cachedUrl != null) {
+            incrementClick(shortCode); // Make it async
+            return cachedUrl;
+        }
+
+        UrlEntity urlEntity = urlRepository.findByShortCode(shortCode)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Short code not found: " + shortCode)
                 );
 
-        urlEntity.setClickCount(urlEntity.getClickCount() + 1);
-        this.urlRepository.save(urlEntity);
+        stringRedisTemplate.opsForValue().set(shortCode, urlEntity.getOriginalUrl());
+
+        incrementClick(shortCode);
 
         return urlEntity.getOriginalUrl();
+    }
+
+    private void incrementClick(String shortCode) {
+
+        UrlEntity urlEntity = urlRepository.findByShortCode(shortCode)
+                .orElseThrow();
+
+        urlEntity.setClickCount(urlEntity.getClickCount() + 1);
+
+        urlRepository.save(urlEntity);
     }
 
     private String generateCode() {
