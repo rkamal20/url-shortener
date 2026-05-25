@@ -34,18 +34,11 @@ public class UrlServiceImpl implements UrlService {
     public UrlDto createUrl(NewUrlDto dto) {
 
         UrlEntity urlEntity = modelMapper.map(dto, UrlEntity.class);
-
         urlEntity.setShortCode(generateCode());
-        urlEntity.setCreatedAt(LocalDateTime.now());
-        urlEntity.setClickCount(0L);
 
-        urlEntity = urlRepository.save(urlEntity);  // check duplicate short code is pending, collision check
+        urlEntity = urlRepository.save(urlEntity);
 
-        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
-        response.setShortUrl(
-                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
-        );
-        return response;
+        return mapToDto(urlEntity);
     }
 
 
@@ -60,11 +53,7 @@ public class UrlServiceImpl implements UrlService {
         modelMapper.map(dto, urlEntity);
         urlEntity = urlRepository.save(urlEntity);
 
-        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
-        response.setShortUrl(
-                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
-        );
-        return response;
+        return mapToDto(urlEntity);
     }
 
     @Override
@@ -83,19 +72,18 @@ public class UrlServiceImpl implements UrlService {
                         case "shortCode":
                             urlEntity.setShortCode((String) value);
                             break;
+                        case "expiresAt":
+                            urlEntity.setExpiresAt(LocalDateTime.parse((String) value));
+                            break;
                         default:
-                            throw new IllegalArgumentException("Field not supported: " + field); // Need to handle globally
+                            throw new IllegalArgumentException("Field not supported: " + field);
                     }
                 }
         );
 
         UrlEntity savedUrlEntity = urlRepository.save(urlEntity);
 
-        UrlDto response = modelMapper.map(savedUrlEntity, UrlDto.class);  // repetitive code
-        response.setShortUrl(
-                "http://localhost:8080/api/urls/r/" + savedUrlEntity.getShortCode()
-        );
-        return response;
+        return mapToDto(savedUrlEntity);
     }
 
     @Override
@@ -119,11 +107,7 @@ public class UrlServiceImpl implements UrlService {
                         )
                 );
 
-        UrlDto response = modelMapper.map(urlEntity, UrlDto.class);  // repetitive code
-        response.setShortUrl(
-                "http://localhost:8080/api/urls/r/" + urlEntity.getShortCode()
-        );
-        return response;
+        return mapToDto(urlEntity);
     }
 
     @Override
@@ -141,7 +125,7 @@ public class UrlServiceImpl implements UrlService {
                         new ResourceNotFoundException("Short code not found: " + shortCode)
                 );
 
-        if (urlEntity.getExpiresAt() != null &&  LocalDateTime.now().isAfter(urlEntity.getExpiresAt())) {
+        if (urlEntity.getExpiresAt() != null && LocalDateTime.now().isAfter(urlEntity.getExpiresAt())) {
             throw new UrlExpiredException("Short URL has expired");              // how this can be handled in redis
         }
 
@@ -150,6 +134,15 @@ public class UrlServiceImpl implements UrlService {
         incrementClick(shortCode);
 
         return urlEntity.getOriginalUrl();
+    }
+
+    private UrlDto mapToDto(UrlEntity urlEntity) {
+
+        UrlDto dto = modelMapper.map(urlEntity, UrlDto.class);
+        dto.setShortUrl(
+                "http://localhost:8080/api/urls/r/" + dto.getShortCode()
+        );
+        return dto;
     }
 
     private void incrementClick(String shortCode) {

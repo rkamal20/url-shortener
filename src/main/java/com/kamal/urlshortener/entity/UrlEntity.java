@@ -23,9 +23,14 @@ public class UrlEntity {
     @Column(unique = true, nullable = false, length = 6)
     private String shortCode;
 
-    private Long clickCount = 0L;
+    private LocalDateTime expiresAt;
 
+    private Long clickCount;
     private LocalDateTime createdAt;
 
-    private LocalDateTime expiresAt;
+    @PrePersist
+    public void prePersist() {
+        this.clickCount = 0L;
+        this.createdAt = LocalDateTime.now();
+    }
 }
