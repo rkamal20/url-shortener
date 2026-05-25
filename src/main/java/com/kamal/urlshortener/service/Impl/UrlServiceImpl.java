@@ -160,18 +160,26 @@ public class UrlServiceImpl implements UrlService {
     private String generateCode() {
 
         String base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-
         Random random = new Random();
 
-        StringBuilder code = new StringBuilder();
+        String code;
+        int attempts = 0;
+        do {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < 6; i++) {
+                sb.append(
+                        base62.charAt(
+                                random.nextInt(base62.length())
+                        )
+                );
+            }
+            code = sb.toString();
+            attempts++;
+        } while (urlRepository.findByShortCode(code).isPresent() && attempts < 5); // use constant for 5
 
-        for (int i = 0; i < 6; i++) {
-            code.append(
-                    base62.charAt(
-                            random.nextInt(base62.length())
-                    )
-            );
+        if (attempts == 5) {
+            throw new RuntimeException("Couldn't generate unique short code");
         }
-        return code.toString();
+        return code;
     }
 }
