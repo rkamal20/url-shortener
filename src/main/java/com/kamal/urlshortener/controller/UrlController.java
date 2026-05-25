@@ -53,8 +53,8 @@ public class UrlController {
         return ResponseEntity.ok(urlService.updateUrl(id, dto));
     }
 
-    @PatchMapping("/{id}")
-    public ResponseEntity<UrlDto> patchUrl(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
-        return ResponseEntity.ok(urlService.patchUrl(id, updates));
-    }
+//    @PatchMapping("/{id}")
+//    public ResponseEntity<UrlDto> patchUrl(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+//        return ResponseEntity.ok(urlService.patchUrl(id, updates));
+//    }
 }
