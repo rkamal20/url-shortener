@@ -2,6 +2,7 @@ package com.kamal.urlshortener.service.Impl;
 
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
+import com.kamal.urlshortener.dto.AnalyticsDto;
 import com.kamal.urlshortener.entity.UrlEntity;
 import com.kamal.urlshortener.exception.UrlExpiredException;
 import com.kamal.urlshortener.exception.ResourceNotFoundException;
@@ -13,7 +14,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.Random;
 
 @Service
@@ -31,83 +31,17 @@ public class UrlServiceImpl implements UrlService {
     }
 
     @Override
-    public UrlDto createUrl(NewUrlDto dto) {
+    public UrlDto shortenUrl(NewUrlDto dto) {
 
         UrlEntity urlEntity = modelMapper.map(dto, UrlEntity.class);
         urlEntity.setShortCode(generateCode());
 
         urlEntity = urlRepository.save(urlEntity);
 
-        return mapToDto(urlEntity);
-    }
+        UrlDto urlDto = modelMapper.map(urlEntity, UrlDto.class);
+        urlDto.setShortUrl("http://localhost:8080/api/urls/" + urlEntity.getShortCode());
 
-
-    @Override
-    public UrlDto updateUrl(Long id, NewUrlDto dto) {
-
-        UrlEntity urlEntity = urlRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("URL not found for id: " + id)
-                );
-
-        modelMapper.map(dto, urlEntity);
-        urlEntity = urlRepository.save(urlEntity);
-
-        return mapToDto(urlEntity);
-    }
-
-    @Override
-    public UrlDto patchUrl(Long id, Map<String, Object> updates) {
-
-        UrlEntity urlEntity = urlRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("URL not found for id: " + id)
-                );
-
-        updates.forEach((field, value) -> {
-                    switch (field) {
-                        case "originalUrl":
-                            urlEntity.setOriginalUrl((String) value);  // No validation check as of now
-                            break;
-                        case "shortCode":
-                            urlEntity.setShortCode((String) value);
-                            break;
-                        case "expiresAt":
-                            urlEntity.setExpiresAt(LocalDateTime.parse((String) value));
-                            break;
-                        default:
-                            throw new IllegalArgumentException("Field not supported: " + field);
-                    }
-                }
-        );
-
-        UrlEntity savedUrlEntity = urlRepository.save(urlEntity);
-
-        return mapToDto(savedUrlEntity);
-    }
-
-    @Override
-    public void deleteUrl(Long id) {
-
-        UrlEntity urlEntity = urlRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("URL not found for id: " + id)
-                );
-
-        urlRepository.delete(urlEntity);
-    }
-
-    @Override
-    public UrlDto getUrlById(Long id) {
-
-        UrlEntity urlEntity = urlRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "URL not found for id: " + id
-                        )
-                );
-
-        return mapToDto(urlEntity);
+        return urlDto;
     }
 
     @Override
@@ -136,11 +70,21 @@ public class UrlServiceImpl implements UrlService {
         return urlEntity.getOriginalUrl();
     }
 
-    private UrlDto mapToDto(UrlEntity urlEntity) {
+    public AnalyticsDto getAnalytics(String shortCode) {
 
-        UrlDto dto = modelMapper.map(urlEntity, UrlDto.class);
+        UrlEntity urlEntity = urlRepository.findByShortCode(shortCode)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Short code not found: " + shortCode)
+                );
+
+        return mapToDto(urlEntity);
+    }
+
+    private AnalyticsDto mapToDto(UrlEntity urlEntity) {
+
+        AnalyticsDto dto = modelMapper.map(urlEntity, AnalyticsDto.class);
         dto.setShortUrl(
-                "http://localhost:8080/api/urls/r/" + dto.getShortCode()
+                "http://localhost:8080/api/urls/" + urlEntity.getShortCode()
         );
         return dto;
     }

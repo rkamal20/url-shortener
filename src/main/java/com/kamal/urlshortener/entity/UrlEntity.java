@@ -26,11 +26,13 @@ public class UrlEntity {
     private LocalDateTime expiresAt;
 
     private Long clickCount;
+    private String status;
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
         this.clickCount = 0L;
+        this.status = "Active";
         this.createdAt = LocalDateTime.now();
     }
 }
