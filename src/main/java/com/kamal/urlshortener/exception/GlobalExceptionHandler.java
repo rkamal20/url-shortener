@@ -12,4 +12,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleResourceNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage()); // return could be more detailed not just string
     }
+
+    @ExceptionHandler(UrlExpiredException.class)
+    public ResponseEntity<String> handleUrlExpired(UrlExpiredException ex) {
+        return ResponseEntity.status(HttpStatus.GONE).body(ex.getMessage());
+    }
 }

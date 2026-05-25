@@ -3,6 +3,7 @@ package com.kamal.urlshortener.service.Impl;
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
 import com.kamal.urlshortener.entity.UrlEntity;
+import com.kamal.urlshortener.exception.UrlExpiredException;
 import com.kamal.urlshortener.exception.ResourceNotFoundException;
 import com.kamal.urlshortener.repository.UrlRepository;
 import com.kamal.urlshortener.service.UrlService;
@@ -139,6 +140,10 @@ public class UrlServiceImpl implements UrlService {
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Short code not found: " + shortCode)
                 );
+
+        if (urlEntity.getExpiresAt() != null &&  LocalDateTime.now().isAfter(urlEntity.getExpiresAt())) {
+            throw new UrlExpiredException("Short URL has expired");              // how this can be handled in redis
+        }
 
         stringRedisTemplate.opsForValue().set(shortCode, urlEntity.getOriginalUrl());
 
