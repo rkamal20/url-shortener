@@ -1,24 +1,15 @@
 package com.kamal.urlshortener.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 public class AnalyticsDto {
 
     private String originalUrl;
-
     private String shortUrl;
-
     private Long clickCount;
-
     private LocalDateTime createdAt;
-
     private LocalDateTime expiresAt;
-
-    private String status;
-
 }

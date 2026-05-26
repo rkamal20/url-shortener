@@ -1,8 +1,8 @@
 package com.kamal.urlshortener.controller;
 
+import com.kamal.urlshortener.dto.AnalyticsDto;
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
-import com.kamal.urlshortener.dto.AnalyticsDto;
 import com.kamal.urlshortener.service.UrlService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -27,13 +27,11 @@ public class UrlController {
         return ResponseEntity.status(HttpStatus.CREATED).body(urlService.shortenUrl(dto));
     }
 
-    @GetMapping("/{shortCode}")
+    @GetMapping("/r/{shortCode}")
     public ResponseEntity<Void> redirectUrl(@PathVariable String shortCode) {
         String originalUrl = urlService.redirectUrl(shortCode);
-
         HttpHeaders headers = new HttpHeaders();
         headers.setLocation(URI.create(originalUrl));
-
         return ResponseEntity.status(HttpStatus.FOUND).headers(headers).build();
     }
 
@@ -41,5 +39,4 @@ public class UrlController {
     public ResponseEntity<AnalyticsDto> getAnalytics(@PathVariable String shortCode) {
         return ResponseEntity.ok(urlService.getAnalytics(shortCode));
     }
-
 }
