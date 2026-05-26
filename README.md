@@ -1,129 +1,157 @@
-URL Shortener
+# 🚀 URL Shortener
 
-A production-grade URL shortener built with Java, Spring Boot, PostgreSQL, and Redis featuring custom aliases, analytics, expiration support, and Redis caching.
+A **production-grade URL shortener** built with **Java, Spring Boot, PostgreSQL and Redis** featuring **custom aliases, analytics, expiration support, and Redis caching**.
 
-Features
+---
 
-* Create shortened URLs
-* Custom alias support (6-character alphanumeric)
-* Fast redirection with Redis cache-aside strategy
-* URL analytics (click count, creation time, expiry)
-* URL expiration handling
-* Centralized exception handling
-* Request validation
-* Swagger API documentation
+## ✨ Features
 
-Tech Stack
+- Short URL generation
+- Custom alias support (**6-character alphanumeric**)
+- Redis cache-aside strategy for low-latency redirects
+- URL analytics
+- URL expiration support
+- Centralized exception handling
+- Request validation
+- Interactive Swagger API docs
 
-* Java 17
-* Spring Boot
-* PostgreSQL
-* Redis
-* Spring Data JPA
-* Hibernate
-* ModelMapper
-* Swagger / OpenAPI 3
-* Maven
+---
 
-Architecture
+## 🛠 Tech Stack
 
-Clean layered architecture:
+- **Java 17**
+- **Spring Boot**
+- **PostgreSQL**
+- **Redis**
+- **Spring Data JPA**
+- **Hibernate**
+- **ModelMapper**
+- **Swagger / OpenAPI 3**
+- **Maven**
 
-* Controller → API endpoints
-* Service → Business logic
-* Repository → Data access
-* DTO → Request/response contracts
-* Entity → Database mapping
-* Exception Handler → Centralized API error handling
-* Config → Bean configuration
+---
 
-API Endpoints
+## 🏗 Architecture
 
-Create Short URL
+```text
+Controller   → API Layer
+Service      → Business Logic
+Repository   → Data Access Layer
+DTO          → Request / Response Models
+Entity       → Database Mapping
+Exception    → Global Error Handling
+Config       → Bean Configuration
+```
 
-POST /api/urls/shorten
+---
 
-Request:
+## 📌 API Endpoints
 
+### 1️⃣ Create Short URL
+
+**POST** `/api/urls/shorten`
+
+#### Request
+
+```json
 {
-"originalUrl": "https://google.com",
-"customAlias": "kamal1",
-"expiresAt": "2026-12-31T23:59:59"
+  "originalUrl": "https://google.com",
+  "customAlias": "kamal1",
+  "expiresAt": "2026-12-31T23:59:59"
 }
+```
 
-Response:
+#### Response
 
+```json
 {
-"shortUrl": "http://localhost:8080/api/urls/r/kamal1"
+  "shortUrl": "http://localhost:8080/api/urls/r/kamal1"
 }
+```
 
-⸻
+---
 
-Redirect
+### 2️⃣ Redirect
 
-GET /api/urls/r/{shortCode}
+**GET** `/api/urls/r/{shortCode}`
 
 Redirects to original URL and increments click count.
 
-⸻
+---
 
-Analytics
+### 3️⃣ Analytics
 
-GET /api/urls/analytics/{shortCode}
+**GET** `/api/urls/analytics/{shortCode}`
 
-Response:
+#### Response
 
+```json
 {
-"originalUrl": "https://google.com",
-"shortUrl": "http://localhost:8080/api/urls/r/kamal1",
-"clickCount": 10,
-"createdAt": "2026-05-26T10:00:00",
-"expiresAt": "2026-12-31T23:59:59"
+  "originalUrl": "https://google.com",
+  "shortUrl": "http://localhost:8080/api/urls/r/kamal1",
+  "clickCount": 10,
+  "createdAt": "2026-05-26T10:00:00",
+  "expiresAt": "2026-12-31T23:59:59"
 }
+```
 
-Caching Flow
+---
 
+## ⚡ Cache Flow
+
+```text
 Request → Redis Cache → Cache Miss → PostgreSQL → Cache Store → Response
+```
 
-This reduces database load and improves redirect latency for read-heavy traffic.
+Improves redirect speed and reduces database load.
 
-Error Handling
+---
 
-Structured API error responses:
+## ❌ Error Response
 
+```json
 {
-"timestamp": "2026-05-26T10:00:00",
-"status": 400,
-"error": "Bad Request",
-"message": "Invalid URL format"
+  "timestamp": "2026-05-26T10:00:00",
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Invalid URL format"
 }
+```
 
-Run Locally
+---
 
-Clone Repository
+## ▶️ Run Locally
 
-git clone <repo-url>
+### Clone Repository
+
+```bash
+git clone https://github.com/rkamal20/url-shortener.git
 cd url-shortener
+```
 
-Configure PostgreSQL and Redis
+### Run Application
 
-Update application.properties
-
-Run
-
+```bash
 mvn spring-boot:run
+```
 
-Swagger:
+### Swagger UI
 
+```text
 http://localhost:8080/api/swagger-ui/index.html
+```
 
-Future Improvements
+---
 
-* Redis TTL sync with URL expiration
-* Async click counting
-* Deployment with cloud hosting
-* Distributed short-code generation strategy
+## 🔮 Future Improvements
 
-Author
+- Redis TTL sync
+- Async click counting
+- Cloud deployment
+- Distributed short-code generation
 
-Kamal Kant Rajput
+---
+
+## 👨‍💻 Author
+
+**Kamal Kant Rajput**
