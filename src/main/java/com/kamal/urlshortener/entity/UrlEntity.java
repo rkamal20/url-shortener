@@ -6,11 +6,10 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-
-@Entity
-@Table(name = "urls")
 @Getter
 @Setter
+@Entity
+@Table(name = "short_urls")
 public class UrlEntity {
 
     @Id
@@ -25,14 +24,15 @@ public class UrlEntity {
 
     private LocalDateTime expiresAt;
 
+    @Column(nullable = false)
     private Long clickCount;
-    private String status;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
     @PrePersist
     public void prePersist() {
         this.clickCount = 0L;
-        this.status = "Active";
         this.createdAt = LocalDateTime.now();
     }
 }

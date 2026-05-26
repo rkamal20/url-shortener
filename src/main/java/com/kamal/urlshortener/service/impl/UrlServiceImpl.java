@@ -1,4 +1,4 @@
-package com.kamal.urlshortener.service.Impl;
+package com.kamal.urlshortener.service.impl;
 
 import com.kamal.urlshortener.dto.NewUrlDto;
 import com.kamal.urlshortener.dto.UrlDto;
@@ -10,6 +10,7 @@ import com.kamal.urlshortener.repository.UrlRepository;
 import com.kamal.urlshortener.service.UrlService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,12 @@ import java.util.Random;
 @Service
 @Transactional
 public class UrlServiceImpl implements UrlService {
+
+    private static final int MAX_GENERATION_ATTEMPTS = 5;
+    private static final Random RANDOM = new Random();
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     private final UrlRepository urlRepository;
     private final ModelMapper modelMapper;
@@ -39,7 +46,7 @@ public class UrlServiceImpl implements UrlService {
         urlEntity = urlRepository.save(urlEntity);
 
         UrlDto urlDto = modelMapper.map(urlEntity, UrlDto.class);
-        urlDto.setShortUrl("http://localhost:8080/api/urls/" + urlEntity.getShortCode());
+        urlDto.setShortUrl(baseUrl + urlEntity.getShortCode());
 
         return urlDto;
     }
@@ -50,7 +57,7 @@ public class UrlServiceImpl implements UrlService {
         String cachedUrl = stringRedisTemplate.opsForValue().get(shortCode);
 
         if (cachedUrl != null) {
-            incrementClick(shortCode); // Make it async
+            incrementClick(shortCode); // move click tracking to async processing for better redirect latency
             return cachedUrl;
         }
 
@@ -60,7 +67,7 @@ public class UrlServiceImpl implements UrlService {
                 );
 
         if (urlEntity.getExpiresAt() != null && LocalDateTime.now().isAfter(urlEntity.getExpiresAt())) {
-            throw new UrlExpiredException("Short URL has expired");              // how this can be handled in redis
+            throw new UrlExpiredException("Short URL has expired"); // invalidate cached entry when expired URL is detected
         }
 
         stringRedisTemplate.opsForValue().set(shortCode, urlEntity.getOriginalUrl());
@@ -70,6 +77,7 @@ public class UrlServiceImpl implements UrlService {
         return urlEntity.getOriginalUrl();
     }
 
+    @Override
     public AnalyticsDto getAnalytics(String shortCode) {
 
         UrlEntity urlEntity = urlRepository.findByShortCode(shortCode)
@@ -84,7 +92,7 @@ public class UrlServiceImpl implements UrlService {
 
         AnalyticsDto dto = modelMapper.map(urlEntity, AnalyticsDto.class);
         dto.setShortUrl(
-                "http://localhost:8080/api/urls/" + urlEntity.getShortCode()
+                baseUrl + urlEntity.getShortCode()
         );
         return dto;
     }
@@ -102,7 +110,6 @@ public class UrlServiceImpl implements UrlService {
     private String generateCode() {
 
         String base62 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        Random random = new Random();
 
         String code;
         int attempts = 0;
@@ -111,15 +118,15 @@ public class UrlServiceImpl implements UrlService {
             for (int i = 0; i < 6; i++) {
                 sb.append(
                         base62.charAt(
-                                random.nextInt(base62.length())
+                                RANDOM.nextInt(base62.length())
                         )
                 );
             }
             code = sb.toString();
             attempts++;
-        } while (urlRepository.findByShortCode(code).isPresent() && attempts < 5); // use constant for 5
+        } while (urlRepository.findByShortCode(code).isPresent() && attempts < MAX_GENERATION_ATTEMPTS);
 
-        if (attempts == 5) {
+        if (attempts == MAX_GENERATION_ATTEMPTS) {
             throw new RuntimeException("Couldn't generate unique short code");
         }
         return code;
