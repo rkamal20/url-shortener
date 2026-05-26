@@ -41,7 +41,12 @@ public class UrlServiceImpl implements UrlService {
     public UrlDto shortenUrl(NewUrlDto dto) {
 
         UrlEntity urlEntity = modelMapper.map(dto, UrlEntity.class);
-        urlEntity.setShortCode(generateCode());
+
+        urlEntity.setShortCode(
+                dto.getCustomAlias() != null && !dto.getCustomAlias().isBlank()
+                        ? validateAlias(dto.getCustomAlias())
+                        : generateCode()
+        );
 
         urlEntity = urlRepository.save(urlEntity);
 
@@ -57,7 +62,7 @@ public class UrlServiceImpl implements UrlService {
         String cachedUrl = stringRedisTemplate.opsForValue().get(shortCode);
 
         if (cachedUrl != null) {
-            incrementClick(shortCode); // move click tracking to async processing for better redirect latency
+            incrementClick(shortCode);
             return cachedUrl;
         }
 
@@ -67,7 +72,7 @@ public class UrlServiceImpl implements UrlService {
                 );
 
         if (urlEntity.getExpiresAt() != null && LocalDateTime.now().isAfter(urlEntity.getExpiresAt())) {
-            throw new UrlExpiredException("Short URL has expired"); // invalidate cached entry when expired URL is detected
+            throw new UrlExpiredException("Short URL has expired");
         }
 
         stringRedisTemplate.opsForValue().set(shortCode, urlEntity.getOriginalUrl());
@@ -130,5 +135,25 @@ public class UrlServiceImpl implements UrlService {
             throw new RuntimeException("Couldn't generate unique short code");
         }
         return code;
+    }
+
+    private String validateAlias(String alias) {
+
+        if (alias.length() != 6) {
+            throw new IllegalArgumentException(
+                    "Custom alias must be exactly 6 characters"
+            );
+        }
+        if (!alias.matches("^[a-zA-Z0-9]{6}$")) {
+            throw new IllegalArgumentException(
+                    "Alias must contain only letters and numbers"
+            );
+        }
+        if (urlRepository.findByShortCode(alias).isPresent()) {
+            throw new IllegalArgumentException(
+                    "Custom alias already exists"
+            );
+        }
+        return alias;
     }
 }
